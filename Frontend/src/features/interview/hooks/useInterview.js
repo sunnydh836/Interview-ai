@@ -60,7 +60,6 @@ export const useInterview = () => {
     }
 
     const getResumePdf = async (interviewReportId) => {
-        setLoading(true)
         let response = null
         try {
             response = await generateResumePdf({ interviewReportId })
@@ -70,11 +69,11 @@ export const useInterview = () => {
             link.setAttribute("download", `resume_${interviewReportId}.pdf`)
             document.body.appendChild(link)
             link.click()
+            document.body.removeChild(link)
         }
         catch (error) {
             console.log(error)
-        } finally {
-            setLoading(false)
+            throw error
         }
     }
 

@@ -1,5 +1,45 @@
 @use "./style/button.scss";
 
+:root {
+  --bg-primary: #09090f;
+  --bg-secondary: #0f111a;
+  --surface-primary: #151824;
+  --surface-secondary: #1c2030;
+
+  --border-primary: #2a3042;
+  --border-strong: #39425a;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #a7b0c2;
+  --text-muted: #788399;
+
+  --accent-primary: #8b5cf6;
+  --accent-primary-hover: #7c3aed;
+  --accent-secondary: #22d3ee;
+
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+
+  --accent-soft: rgba(139, 92, 246, 0.12);
+  --accent-border: rgba(139, 92, 246, 0.35);
+
+  --gradient-primary: linear-gradient(
+    135deg,
+    #8b5cf6 0%,
+    #6366f1 55%,
+    #22d3ee 100%
+  );
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  --shadow-card: 0 12px 35px rgba(0, 0, 0, 0.22);
+  --shadow-accent: 0 10px 30px rgba(139, 92, 246, 0.2);
+}
+
 * {
     margin: 0%;
     padding: 0%;
@@ -10,11 +50,11 @@ html,
 body,
 #root {
     width: 100%;
-    background-color: #161616;
-    color: whitesmoke;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .highlight{
-    color: #d20d3b;
+    color: var(--accent-primary);
 }

@@ -4,17 +4,35 @@
     outline: none;
     padding-inline: 1.5rem;
     padding-block: 0.75rem;
-    border-radius: 1rem;
+    border-radius: var(--radius-md);
     cursor: pointer;
 
-    transition: all 0.3s ease-in-out;
+    transition: all 0.2s ease-in-out;
 
     &.primary-button{
-        background-color: #e1034d;
-        color: white;
+        background: var(--accent-primary);
+        color: var(--text-primary);
+
+        &:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent-secondary);
+            outline-offset: 2px;
+        }
     }
 
     &:active{
-        transform: scale(0.9);
+        transform: scale(0.96);
+    }
+
+    &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        
+        &:active {
+            transform: none;
+        }
     }
 }

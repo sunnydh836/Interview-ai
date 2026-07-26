@@ -1,33 +1,138 @@
 // ── Variables ────────────────────────────────────────────────────────────────
-$bg-page:        #0d1117;
-$bg-card:        #161b22;
-$bg-panel:       #1c2230;
-$bg-input:       #1e2535;
-$border-color:   #2a3348;
-$text-primary:   #e6edf3;
-$text-muted:     #7d8590;
-$accent:         #ff2d78;
-$accent-alt:     #ff6b9d;
-$badge-required: #ff2d78;
-$badge-best:     #ff2d78;
-$info-bg:        #1b2a4a;
-$info-border:    #2d4a7a;
+$bg-page:        var(--bg-primary);
+$bg-card:        var(--surface-primary);
+$bg-panel:       var(--surface-primary);
+$bg-input:       var(--surface-secondary);
+$border-color:   var(--border-primary);
+$text-primary:   var(--text-primary);
+$text-muted:     var(--text-secondary);
+$accent:         var(--accent-primary);
+$accent-alt:     var(--accent-primary-hover);
+$badge-required: var(--error);
+$badge-best:     var(--accent-secondary);
+$info-bg:        var(--accent-soft);
+$info-border:    var(--accent-border);
 $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
 // ── Page Shell ───────────────────────────────────────────────────────────────
-.home-page {
+.home-page-container {
     width: 100%;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     background-color: $bg-page;
+}
+
+.home-page {
+    width: 100%;
+    flex: 1;
     color: $text-primary;
     font-family: $font-stack;
 
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 3rem 1.5rem;
     gap: 2rem;
+}
+
+// ── Dashboard Navbar ────────────────────────────────────────────────────────
+.dashboard-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    background: rgba(15, 17, 26, 0.92);
+    border-bottom: 1px solid var(--border-primary);
+    backdrop-filter: blur(12px);
+}
+
+.dashboard-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    height: 64px;
+
+    .navbar-brand {
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .navbar-user-nav {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+
+        .user-icon {
+            color: var(--accent-primary);
+        }
+
+        .user-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    .logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.85rem;
+        background-color: var(--surface-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+
+        .logout-icon {
+            stroke-width: 2.25;
+            transition: transform 0.2s ease;
+        }
+
+        &:hover {
+            color: var(--text-primary);
+            border-color: var(--error);
+            background-color: rgba(239, 68, 68, 0.05);
+
+            .logout-icon {
+                transform: translateX(2px);
+                color: var(--error);
+            }
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent-secondary);
+            outline-offset: 2px;
+        }
+
+        &:active {
+            transform: scale(0.96);
+        }
+    }
 }
 
 // ── Page Header ──────────────────────────────────────────────────────────────
@@ -50,7 +155,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     }
 
     .highlight {
-        color: $accent;
+        color: var(--accent-secondary);
     }
 }
 
@@ -60,7 +165,8 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     max-width: 900px;
     background-color: $bg-card;
     border: 1px solid $border-color;
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
     overflow: hidden;
 
     &__body {
@@ -77,7 +183,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
 
         .footer-info {
             font-size: 0.8rem;
-            color: $text-muted;
+            color: var(--text-muted);
         }
     }
 }
@@ -113,7 +219,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     &__icon {
         display: flex;
         align-items: center;
-        color: $accent;
+        color: var(--accent-primary);
     }
 
     &__textarea {
@@ -121,22 +227,23 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         width: 100%;
         background-color: $bg-input;
         border: 1px solid $border-color;
-        border-radius: 0.5rem;
+        border-radius: var(--radius-md);
         padding: 0.75rem 1rem;
         color: $text-primary;
         font-family: $font-stack;
         font-size: 0.875rem;
         resize: none;
         outline: none;
-        transition: border-color 0.2s;
+        transition: border-color 0.2s, box-shadow 0.2s;
         line-height: 1.5;
 
         &::placeholder {
-            color: $text-muted;
+            color: var(--text-muted);
         }
 
         &:focus {
-            border-color: $accent;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--accent-soft);
         }
 
         &--short {
@@ -153,7 +260,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
             bottom: 2.25rem;
             right: 2rem;
             font-size: 0.75rem;
-            color: $text-muted;
+            color: var(--text-muted);
         }
     }
 
@@ -167,20 +274,20 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     font-size: 0.7rem;
     font-weight: 600;
     padding: 0.15rem 0.5rem;
-    border-radius: 0.3rem;
+    border-radius: var(--radius-sm);
     text-transform: uppercase;
     letter-spacing: 0.03em;
 
     &--required {
-        background-color: rgba($badge-required, 0.15);
-        color: $badge-required;
-        border: 1px solid rgba($badge-required, 0.3);
+        background-color: rgba(239, 68, 68, 0.12);
+        color: var(--error);
+        border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
     &--best {
-        background-color: rgba($badge-best, 0.15);
-        color: $badge-best;
-        border: 1px solid rgba($badge-best, 0.3);
+        background-color: rgba(34, 211, 238, 0.12);
+        color: var(--accent-secondary);
+        border: 1px solid rgba(34, 211, 238, 0.3);
     }
 }
 
@@ -211,17 +318,22 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     padding: 1.5rem 1rem;
     background-color: $bg-input;
     border: 2px dashed $border-color;
-    border-radius: 0.6rem;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: border-color 0.2s, background-color 0.2s;
+    transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
 
     &:hover {
-        border-color: $accent;
-        background-color: rgba($accent, 0.05);
+        border-color: var(--accent-primary);
+        background-color: var(--accent-soft);
+    }
+
+    &:focus-within {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 2px var(--accent-soft);
     }
 
     &__icon {
-        color: $accent;
+        color: var(--accent-secondary);
         margin-bottom: 0.25rem;
     }
 
@@ -234,7 +346,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
 
     &__subtitle {
         font-size: 0.75rem;
-        color: $text-muted;
+        color: var(--text-muted);
         margin: 0;
     }
 }
@@ -244,7 +356,7 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: $text-muted;
+    color: var(--text-muted);
     font-size: 0.75rem;
 
     &::before,
@@ -275,18 +387,18 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     padding: 0.75rem 1rem;
     background-color: $info-bg;
     border: 1px solid $info-border;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
 
     &__icon {
         flex-shrink: 0;
-        color: #4a90e2;
-        margin-top: 1px;
+        color: var(--accent-secondary);
+        margin-top: 2px;
     }
 
     p {
         margin: 0;
         font-size: 0.8rem;
-        color: #8ab4f8;
+        color: var(--text-secondary);
         line-height: 1.5;
 
         strong {
@@ -301,18 +413,25 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, $accent 0%, darken($accent, 10%) 100%);
+    background: var(--gradient-primary);
     color: #fff;
     font-size: 0.9rem;
     font-weight: 600;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
+    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
     font-family: $font-stack;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
 
     &:hover {
-        opacity: 0.9;
+        opacity: 0.95;
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--accent-secondary);
+        outline-offset: 2px;
     }
 
     &:active {
@@ -320,54 +439,171 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     }
 }
 
-.recent-reports{
+.recent-reports {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     width: 100%;
     max-width: 900px;
 
-    .reports-list{
+    h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .reports-list {
         display: flex;
         gap: 0.75rem;
         flex-wrap: wrap;
 
-        .report-item{
-            background-color: $bg-card;
+        .report-item {
+            background-color: var(--surface-primary);
             border: 1px solid $border-color;
-            border-radius: 0.5rem;
+            border-radius: var(--radius-md);
             padding: 1rem;
             flex: 1;
+            min-width: 250px;
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
             cursor: pointer;
-            flex-shrink: 0;
+            transition: all 0.2s ease-in-out;
+
+            &:hover {
+                border-color: var(--accent-primary);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            }
+
+            h3 {
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin: 0;
+            }
+
+            .report-meta {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                margin: 0;
+            }
 
             .match-score {
                 font-size: 0.8rem;
                 font-weight: 600;
-                color: $accent;
-                align-items: flex-start;
+                margin: 0;
+
+                &.score--high {
+                    color: var(--success);
+                }
+                &.score--mid {
+                    color: var(--warning);
+                }
+                &.score--low {
+                    color: var(--error);
+                }
             }
         }
     }
 }
 
-
 // ── Page Footer ───────────────────────────────────────────────────────────────
 .page-footer {
     display: flex;
     gap: 1.5rem;
+    margin-top: 1rem;
 
     a {
         font-size: 0.8rem;
-        color: $text-muted;
+        color: var(--text-muted);
         text-decoration: none;
         transition: color 0.2s;
 
         &:hover {
-            color: $text-primary;
+            color: var(--text-primary);
+        }
+    }
+}
+
+// ── Responsive Layout ────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+    .dashboard-navbar {
+        padding: 0.75rem 1rem;
+        
+        .user-profile {
+            .user-name {
+                max-width: 100px;
+            }
+        }
+
+        .logout-btn {
+            padding: 0.4rem 0.6rem;
+            
+            .logout-text {
+                display: none; /* Hide text on mobile to prevent overflow */
+            }
+        }
+    }
+
+    .home-page {
+        padding: 2rem 1rem;
+        gap: 1.5rem;
+    }
+
+    .page-header {
+        h1 {
+            font-size: 1.75rem;
+        }
+    }
+
+    .interview-card {
+        border-radius: var(--radius-md);
+
+        &__body {
+            flex-direction: column;
+            min-height: auto;
+        }
+
+        &__footer {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+            text-align: center;
+
+            .generate-btn {
+                justify-content: center;
+            }
+        }
+    }
+
+    .panel-divider {
+        width: 100%;
+        height: 1px;
+    }
+
+    .panel {
+        padding: 1.25rem;
+        
+        &__textarea {
+            min-height: 120px;
+        }
+        
+        &--left {
+            .char-counter {
+                bottom: 1.75rem;
+                right: 1.75rem;
+            }
+        }
+    }
+
+    .recent-reports {
+        .reports-list {
+            flex-direction: column;
+            
+            .report-item {
+                width: 100%;
+            }
         }
     }
 }
