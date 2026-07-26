@@ -61,21 +61,31 @@ async function generatePdfFromHtml(htmlContent) {
     let browser;
 
     try {
+        console.log("PDF Generation: Launching Puppeteer browser...");
+        console.log("PDF Generation Environment Info:", {
+            PUPPETEER_SKIP_DOWNLOAD: process.env.PUPPETEER_SKIP_DOWNLOAD,
+            NODE_ENV: process.env.NODE_ENV,
+            cwd: process.cwd()
+        });
+
         browser = await puppeteer.launch({
             headless: true,
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage"
+                "--disable-dev-shm-usage",
+                "--disable-gpu"
             ]
         });
 
+        console.log("PDF Generation: Puppeteer browser launched successfully.");
         const page = await browser.newPage();
 
         await page.setContent(htmlContent, {
             waitUntil: "networkidle0"
         });
 
+        console.log("PDF Generation: Generating PDF buffer...");
         const pdfBuffer = await page.pdf({
             format: "A4",
             printBackground: true,
@@ -87,14 +97,16 @@ async function generatePdfFromHtml(htmlContent) {
             }
         });
 
+        console.log("PDF Generation: PDF buffer generated successfully.");
         return pdfBuffer;
 
     } catch (error) {
-        console.error("PDF generation failed:", error);
+        console.error("PDF Generation: PDF generation failed during Puppeteer execution. Details:", error);
         throw error;
 
     } finally {
         if (browser) {
+            console.log("PDF Generation: Closing Puppeteer browser...");
             await browser.close();
         }
     }
