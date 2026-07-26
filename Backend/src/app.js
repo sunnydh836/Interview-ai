@@ -4,9 +4,13 @@ const cors = require("cors");
 
 const app = express();
 
+// Trust reverse proxy (e.g., Render) to allow secure cookies over HTTPS
+app.set("trust proxy", 1);
+
 const allowedOrigins = [
   "http://localhost:5173",
   process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL?.replace(/\/$/, ""),
 ].filter(Boolean);
 
 app.use(

@@ -14,6 +14,9 @@ export const useAuth = () => {
         setLoading(true)
         try {
             const data = await login({ email, password })
+            if (data && data.token) {
+                localStorage.setItem("token", data.token)
+            }
             setUser(data.user)
         } catch (err) {
 
@@ -26,6 +29,9 @@ export const useAuth = () => {
         setLoading(true)
         try {
             const data = await register({ username, email, password })
+            if (data && data.token) {
+                localStorage.setItem("token", data.token)
+            }
             setUser(data.user)
         } catch (err) {
 
@@ -37,11 +43,12 @@ export const useAuth = () => {
     const handleLogout = async () => {
         setLoading(true)
         try {
-            const data = await logout()
-            setUser(null)
+            await logout()
         } catch (err) {
-
+            console.error("Logout failed:", err)
         } finally {
+            localStorage.removeItem("token")
+            setUser(null)
             setLoading(false)
         }
     }
@@ -50,10 +57,12 @@ export const useAuth = () => {
 
         const getAndSetUser = async () => {
             try {
-
                 const data = await getMe()
                 setUser(data.user)
-            } catch (err) { } finally {
+            } catch (err) {
+                localStorage.removeItem("token")
+                setUser(null)
+            } finally {
                 setLoading(false)
             }
         }
