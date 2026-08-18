@@ -188,6 +188,7 @@ async function getMeController(req, res) {
         const user = await userModel
             .findById(req.user.id)
             .select("-password")
+            .lean()
 
         if (!user) {
             return res.status(404).json({

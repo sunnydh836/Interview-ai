@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import "../style/home.scss"
 import { useInterview } from '../hooks/useInterview.js'
 import { useNavigate } from 'react-router'
@@ -8,22 +8,103 @@ import DashboardNavbar from '../components/DashboardNavbar.jsx'
 const Home = () => {
 
     const { user, handleLogout } = useAuth()
-    const { loading, generateReport, reports } = useInterview()
+    const { loading, reportsLoading, generateReport, reports, getReports } = useInterview()
     const [ jobDescription, setJobDescription ] = useState("")
     const [ selfDescription, setSelfDescription ] = useState("")
+    const [ error, setError ] = useState("")
+    const [ selectedFile, setSelectedFile ] = useState(null)
     const resumeInputRef = useRef()
 
     const navigate = useNavigate()
+
+    useEffect(() => {
+        getReports().catch(console.error)
+    }, [getReports])
 
     const onLogoutClick = async () => {
         await handleLogout()
         navigate("/login")
     }
 
+    const validateAndSetFile = (file) => {
+        if (!file) return
+
+        const allowedExtensions = [ "pdf", "docx" ]
+        const fileExtension = file.name.split(".").pop().toLowerCase()
+
+        if (!allowedExtensions.includes(fileExtension)) {
+            setError("Please upload a PDF or DOCX file.")
+            setSelectedFile(null)
+            if (resumeInputRef.current) resumeInputRef.current.value = ""
+            return
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            setError("Resume must be smaller than 5 MB.")
+            setSelectedFile(null)
+            if (resumeInputRef.current) resumeInputRef.current.value = ""
+            return
+        }
+
+        setError("")
+        setSelectedFile(file)
+    }
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[ 0 ]
+        validateAndSetFile(file)
+    }
+
+    const handleDragOver = (e) => {
+        e.preventDefault()
+    }
+
+    const handleDrop = (e) => {
+        e.preventDefault()
+        const file = e.dataTransfer.files[ 0 ]
+        if (file) {
+            validateAndSetFile(file)
+            const dataTransfer = new DataTransfer()
+            dataTransfer.items.add(file)
+            if (resumeInputRef.current) {
+                resumeInputRef.current.files = dataTransfer.files
+            }
+        }
+    }
+
+    const handleClearFile = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setSelectedFile(null)
+        if (resumeInputRef.current) {
+            resumeInputRef.current.value = ""
+        }
+    }
+
     const handleGenerateReport = async () => {
-        const resumeFile = resumeInputRef.current.files[ 0 ]
-        const data = await generateReport({ jobDescription, selfDescription, resumeFile })
-        navigate(`/interview/${data._id}`)
+        const resumeFile = selectedFile
+        
+        if (!jobDescription.trim()) {
+            setError("Target Job Description is required.")
+            return
+        }
+        
+        if (!resumeFile && !selfDescription.trim()) {
+            setError("Either a Resume or a Self Description is required to generate a plan.")
+            return
+        }
+
+        setError("")
+        try {
+            const data = await generateReport({ jobDescription, selfDescription, resumeFile })
+            if (data && data._id) {
+                navigate(`/interview/${data._id}`)
+            } else {
+                setError("Failed to generate report. Please check the backend logs.")
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || "Failed to generate interview strategy.")
+        }
     }
 
     if (loading) {
@@ -44,6 +125,21 @@ const Home = () => {
                     <h1>Create Your Custom <span className='highlight'>Interview Plan</span></h1>
                     <p>Let our AI analyze the job requirements and your unique profile to build a winning strategy.</p>
                 </header>
+
+                {error && (
+                    <div className='error-banner' style={{
+                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid var(--error)',
+                        color: 'var(--error)',
+                        padding: '1rem',
+                        borderRadius: 'var(--radius-md)',
+                        marginBottom: '1.5rem',
+                        textAlign: 'center',
+                        fontWeight: 'bold'
+                    }}>
+                        {error}
+                    </div>
+                )}
     
                 {/* Main Card */}
                 <div className='interview-card'>
@@ -85,13 +181,58 @@ const Home = () => {
                                     Upload Resume
                                     <span className='badge badge--best'>Best Results</span>
                                 </label>
-                                <label className='dropzone' htmlFor='resume'>
-                                    <span className='dropzone__icon'>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></svg>
-                                    </span>
-                                    <p className='dropzone__title'>Click to upload or drag &amp; drop</p>
-                                    <p className='dropzone__subtitle'>PDF or DOCX (Max 5MB)</p>
-                                    <input ref={resumeInputRef} hidden type='file' id='resume' name='resume' accept='.pdf,.docx' />
+                                <label 
+                                    className='dropzone' 
+                                    htmlFor='resume'
+                                    onDragOver={handleDragOver}
+                                    onDrop={handleDrop}
+                                >
+                                    {selectedFile ? (
+                                        <>
+                                            <span className='dropzone__icon success-icon' style={{ color: 'var(--success)' }}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                            </span>
+                                            <p className='dropzone__title' style={{ color: 'var(--success)' }}>✓ Resume Selected</p>
+                                            <p className='dropzone__subtitle' style={{ fontWeight: 'bold', color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%', paddingInline: '1rem' }} title={selectedFile.name}>
+                                                {selectedFile.name}
+                                            </p>
+                                            <p className='dropzone__subtitle' style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--text-muted)' }}>Click to replace</p>
+                                            <button 
+                                                type="button" 
+                                                onClick={handleClearFile} 
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: 'var(--error)',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: '600',
+                                                    marginTop: '0.75rem',
+                                                    textDecoration: 'underline',
+                                                    zIndex: 20
+                                                }}
+                                            >
+                                                Remove file
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className='dropzone__icon'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></svg>
+                                            </span>
+                                            <p className='dropzone__title'>Click to upload or drag &amp; drop</p>
+                                            <p className='dropzone__subtitle'>PDF or DOCX (Max 5MB)</p>
+                                        </>
+                                    )}
+                                    <input 
+                                        ref={resumeInputRef} 
+                                        hidden 
+                                        type='file' 
+                                        id='resume' 
+                                        name='resume' 
+                                        accept='.pdf,.docx' 
+                                        onChange={handleFileChange}
+                                    />
                                 </label>
                             </div>
     
@@ -133,9 +274,23 @@ const Home = () => {
                 </div>
     
                 {/* Recent Reports List */}
-                {reports.length > 0 && (
-                    <section className='recent-reports'>
-                        <h2>My Recent Interview Plans</h2>
+                <section className='recent-reports'>
+                    <h2>My Recent Interview Plans</h2>
+                    {reportsLoading ? (
+                        <div className="reports-loading" style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '2rem',
+                            color: 'var(--text-muted)',
+                            gap: '0.5rem'
+                        }}>
+                            <svg className="spinner" viewBox="0 0 50 50" width="20" height="20" style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true">
+                                <circle cx="25" cy="25" r="20" fill="none" strokeWidth="5" stroke="currentColor" strokeLinecap="round" strokeDasharray="1, 150" strokeDashoffset="0"></circle>
+                            </svg>
+                            <span>Loading recent plans...</span>
+                        </div>
+                    ) : reports.length > 0 ? (
                         <ul className='reports-list'>
                             {reports.map(report => (
                                 <li key={report._id} className='report-item' onClick={() => navigate(`/interview/${report._id}`)}>
@@ -145,8 +300,10 @@ const Home = () => {
                                 </li>
                             ))}
                         </ul>
-                    </section>
-                )}
+                    ) : (
+                        <p style={{ color: 'var(--text-muted)', padding: '1rem 0' }}>No recent interview plans. Create one above to get started!</p>
+                    )}
+                </section>
     
                 {/* Page Footer */}
                 <footer className='page-footer'>

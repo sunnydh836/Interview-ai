@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import '../style/interview.scss'
 import { useInterview } from '../hooks/useInterview.js'
-import { useNavigate, useParams, Link } from 'react-router'
+import { useParams, Link } from 'react-router'
 
 
 
@@ -62,20 +62,39 @@ const Interview = () => {
     const { report, getReportById, loading, getResumePdf } = useInterview()
     const { interviewId } = useParams()
     const [ isGeneratingResume, setIsGeneratingResume ] = useState(false)
+    const [ error, setError ] = useState("")
 
     useEffect(() => {
         if (interviewId) {
             getReportById(interviewId)
         }
-    }, [ interviewId ])
+    }, [ interviewId, getReportById ])
 
     const handleDownloadResume = async () => {
         if (isGeneratingResume) return
+        setError("")
         try {
             setIsGeneratingResume(true)
             await getResumePdf(interviewId)
-        } catch (error) {
-            console.error(error)
+        } catch (err) {
+            console.error(err)
+            let errorMessage = "Unable to generate your resume. Please try again."
+            if (err.response && err.response.data instanceof Blob) {
+                try {
+                    const text = await err.response.data.text()
+                    const json = JSON.parse(text)
+                    if (json && json.message) {
+                        errorMessage = json.message
+                    }
+                } catch (e) {
+                    console.error("Failed to parse error blob", e)
+                }
+            } else if (err.response?.data?.message) {
+                errorMessage = err.response.data.message
+            } else if (err.message) {
+                errorMessage = err.message
+            }
+            setError(errorMessage)
         } finally {
             setIsGeneratingResume(false)
         }
@@ -106,6 +125,21 @@ const Interview = () => {
                     </Link>
                     <span className='report-header__title'>{report.title || 'Interview Report'}</span>
                 </header>
+
+                {error && (
+                    <div className='error-banner' style={{
+                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid var(--error)',
+                        color: 'var(--error)',
+                        padding: '1rem',
+                        borderRadius: 'var(--radius-md)',
+                        marginBottom: '1.5rem',
+                        textAlign: 'center',
+                        fontWeight: 'bold'
+                    }}>
+                        {error}
+                    </div>
+                )}
 
                 <div className='interview-layout'>
 

@@ -32,6 +32,32 @@ const interviewReportSchema = z.object({
     title: z.string().describe("The title of the job for which the interview report is generated"),
 })
 
+function parseJsonResponse(text) {
+    if (!text) {
+        throw new Error("Empty AI response received.");
+    }
+    
+    let cleaned = text.trim();
+    if (cleaned.startsWith("```")) {
+        cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+    }
+    
+    try {
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error("Failed to parse raw JSON. Attempting regex extraction...", e);
+        const match = cleaned.match(/\{[\s\S]*\}/);
+        if (match) {
+            try {
+                return JSON.parse(match[0]);
+            } catch (innerError) {
+                console.error("Regex JSON extraction also failed:", innerError);
+            }
+        }
+        throw new Error("Failed to parse JSON response from Gemini AI.");
+    }
+}
+
 async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
 
 
@@ -50,7 +76,7 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
         }
     })
 
-    return JSON.parse(response.text)
+    return parseJsonResponse(response.text)
 
 
 }
@@ -68,7 +94,7 @@ async function generatePdfFromHtml(htmlContent) {
             cwd: process.cwd()
         });
 
-        browser = await puppeteer.launch({
+        const launchOptions = {
             headless: true,
             args: [
                 "--no-sandbox",
@@ -76,7 +102,13 @@ async function generatePdfFromHtml(htmlContent) {
                 "--disable-dev-shm-usage",
                 "--disable-gpu"
             ]
-        });
+        };
+
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        }
+
+        browser = await puppeteer.launch(launchOptions);
 
         console.log("PDF Generation: Puppeteer browser launched successfully.");
         const page = await browser.newPage();
@@ -150,7 +182,7 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
     })
 
 
-    const jsonContent = JSON.parse(response.text)
+    const jsonContent = parseJsonResponse(response.text)
 
     const pdfBuffer = await generatePdfFromHtml(jsonContent.html)
 
