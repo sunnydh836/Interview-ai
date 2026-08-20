@@ -1,5 +1,5 @@
 import { getAllInterviewReports, generateInterviewReport, getInterviewReportById, generateResumePdf } from "../services/interview.api"
-import { useContext } from "react"
+import { useContext, useCallback } from "react"
 import { InterviewContext } from "../interview.context"
 
 
@@ -13,7 +13,7 @@ export const useInterview = () => {
 
     const { loading, setLoading, reportsLoading, setReportsLoading, report, setReport, reports, setReports } = context
 
-    const generateReport = async ({ jobDescription, selfDescription, resumeFile }) => {
+    const generateReport = useCallback(async ({ jobDescription, selfDescription, resumeFile }) => {
         setLoading(true)
         try {
             const response = await generateInterviewReport({ jobDescription, selfDescription, resumeFile })
@@ -29,9 +29,9 @@ export const useInterview = () => {
         }
 
         return null
-    }
+    }, [setLoading, setReport])
 
-    const getReportById = async (interviewId) => {
+    const getReportById = useCallback(async (interviewId) => {
         setLoading(true)
         try {
             const response = await getInterviewReportById(interviewId)
@@ -46,9 +46,9 @@ export const useInterview = () => {
             setLoading(false)
         }
         return null
-    }
+    }, [setLoading, setReport])
 
-    const getReports = async () => {
+    const getReports = useCallback(async () => {
         setReportsLoading(true)
         try {
             const response = await getAllInterviewReports()
@@ -64,12 +64,11 @@ export const useInterview = () => {
         }
 
         return []
-    }
+    }, [setReportsLoading, setReports])
 
-    const getResumePdf = async (interviewReportId) => {
-        let response = null
+    const getResumePdf = useCallback(async (interviewReportId) => {
         try {
-            response = await generateResumePdf({ interviewReportId })
+            const response = await generateResumePdf({ interviewReportId })
             const blob = response instanceof Blob ? response : new Blob([ response ], { type: "application/pdf" })
             const url = window.URL.createObjectURL(blob)
             const link = document.createElement("a")
@@ -84,8 +83,20 @@ export const useInterview = () => {
             console.log(error)
             throw error
         }
-    }
+    }, [])
 
-    return { loading, reportsLoading, report, reports, generateReport, getReportById, getReports, getResumePdf }
+    const fetchResumeBlob = useCallback(async (interviewReportId) => {
+        try {
+            const response = await generateResumePdf({ interviewReportId })
+            const blob = response instanceof Blob ? response : new Blob([ response ], { type: "application/pdf" })
+            return blob
+        }
+        catch (error) {
+            console.log(error)
+            throw error
+        }
+    }, [])
+
+    return { loading, reportsLoading, report, reports, generateReport, getReportById, getReports, getResumePdf, fetchResumeBlob }
 
 }

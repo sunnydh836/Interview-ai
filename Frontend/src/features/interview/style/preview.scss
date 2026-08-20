@@ -1,0 +1,413 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Resume Preview Page Styles
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$font-stack: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+// ── Page Shell ──────────────────────────────────────────────────────
+.preview-page {
+    width: 100%;
+    height: 100vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: $font-stack;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+// ── Top Toolbar ──────────────────────────────────────────────────────
+.preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.25rem;
+    height: 58px;
+    flex-shrink: 0;
+    background-color: var(--surface-primary);
+    border-bottom: 1px solid var(--border-primary);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+    gap: 1rem;
+
+    &__left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    &__title-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    &__label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+
+    &__title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 320px;
+    }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.28rem 0.65rem;
+        border-radius: 999px;
+        background-color: var(--accent-soft);
+        color: var(--accent-primary);
+        border: 1px solid var(--accent-border);
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-shrink: 0;
+    }
+}
+
+// ── Toolbar Buttons ──────────────────────────────────────────────────
+.preview-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-family: $font-stack;
+    font-size: 0.835rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border: none;
+    outline: none;
+    white-space: nowrap;
+
+    &:focus-visible {
+        outline: 2px solid var(--accent-secondary);
+        outline-offset: 2px;
+    }
+
+    // Ghost / Secondary
+    &--ghost {
+        background-color: transparent;
+        border: 1px solid var(--border-primary);
+        color: var(--text-secondary);
+
+        &:hover {
+            background-color: var(--surface-secondary);
+            color: var(--text-primary);
+            border-color: var(--border-strong);
+        }
+
+        &:active {
+            transform: scale(0.97);
+        }
+    }
+
+    // Primary / Download
+    &--primary {
+        background: var(--gradient-primary);
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+
+        &:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+            transform: translateY(-1px);
+        }
+
+        &:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        &:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+    }
+
+    // Icon-only
+    &--icon {
+        padding: 0.5rem;
+        border-radius: var(--radius-md);
+        background-color: transparent;
+        border: 1px solid var(--border-primary);
+        color: var(--text-secondary);
+
+        &:hover {
+            background-color: var(--surface-secondary);
+            color: var(--text-primary);
+        }
+    }
+}
+
+// ── Spinner ─────────────────────────────────────────────────────────
+.preview-spinner {
+    animation: previewSpin 0.9s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes previewSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+// ── Main Viewer Area ─────────────────────────────────────────────────
+.preview-viewer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    background-color: #0c0e18;
+}
+
+// ── Loading State ────────────────────────────────────────────────────
+.preview-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    background-color: #0c0e18;
+    z-index: 5;
+    animation: fadeIn 0.3s ease;
+
+    &__icon {
+        position: relative;
+        width: 72px;
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid var(--border-primary);
+    }
+
+    &__text {
+        text-align: center;
+    }
+
+    &__title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 0.35rem;
+    }
+
+    &__sub {
+        font-size: 0.835rem;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    &__steps {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    &__step {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        opacity: 0;
+        animation: stepFadeIn 0.5s ease forwards;
+
+        &:nth-child(1) { animation-delay: 0.4s; }
+        &:nth-child(2) { animation-delay: 1.2s; }
+        &:nth-child(3) { animation-delay: 2.2s; }
+
+        &--done {
+            color: var(--success);
+        }
+
+        svg {
+            flex-shrink: 0;
+        }
+    }
+}
+
+@keyframes stepFadeIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+// ── Error State ──────────────────────────────────────────────────────
+.preview-error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background-color: #0c0e18;
+    z-index: 5;
+    text-align: center;
+    padding: 2rem;
+    animation: fadeIn 0.3s ease;
+
+    &__icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--error);
+    }
+
+    &__title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    &__message {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        max-width: 400px;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    &__actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+}
+
+// ── PDF Iframe ───────────────────────────────────────────────────────
+.preview-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: #ffffff;
+    display: block;
+    animation: fadeIn 0.35s ease;
+}
+
+// ── Bottom Status Bar ────────────────────────────────────────────────
+.preview-statusbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 1.25rem;
+    background-color: var(--surface-primary);
+    border-top: 1px solid var(--border-primary);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    gap: 1rem;
+
+    &__left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    &__dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: var(--success);
+        box-shadow: 0 0 6px var(--success);
+        flex-shrink: 0;
+
+        &--loading {
+            background-color: var(--warning);
+            box-shadow: 0 0 6px var(--warning);
+            animation: pulse 1.2s ease infinite;
+        }
+
+        &--error {
+            background-color: var(--error);
+            box-shadow: 0 0 6px var(--error);
+        }
+    }
+
+    &__right {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+// ── Responsive ───────────────────────────────────────────────────────
+@media (max-width: 640px) {
+    .preview-toolbar {
+        padding: 0 0.85rem;
+        height: 54px;
+
+        &__title {
+            max-width: 160px;
+            font-size: 0.82rem;
+        }
+
+        &__badge {
+            display: none;
+        }
+    }
+
+    .preview-btn {
+        &--ghost span,
+        &--primary span {
+            display: none;
+        }
+
+        &--ghost,
+        &--primary {
+            padding: 0.5rem;
+            gap: 0;
+        }
+    }
+}

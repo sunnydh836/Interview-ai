@@ -7,6 +7,7 @@ const Login = lazy(() => import("./features/auth/pages/Login"));
 const Register = lazy(() => import("./features/auth/pages/Register"));
 const Home = lazy(() => import("./features/interview/pages/Home"));
 const Interview = lazy(() => import("./features/interview/pages/Interview"));
+const Preview   = lazy(() => import("./features/interview/pages/Preview"));
 
 const PageLoader = () => (
     <main className="loading-screen">
@@ -30,5 +31,9 @@ export const router = createBrowserRouter([
     {
         path: "/interview/:interviewId",
         element: <Protected><Suspense fallback={<PageLoader />}><Interview /></Suspense></Protected>
+    },
+    {
+        path: "/interview/:interviewId/preview",
+        element: <Protected><Suspense fallback={<PageLoader />}><Preview /></Suspense></Protected>
     }
 ]);
