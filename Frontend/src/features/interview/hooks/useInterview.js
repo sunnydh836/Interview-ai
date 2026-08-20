@@ -1,10 +1,8 @@
-import { getAllInterviewReports, generateInterviewReport, getInterviewReportById, generateResumePdf } from "../services/interview.api"
+﻿import { getAllInterviewReports, generateInterviewReport, getInterviewReportById, generateResumePdf } from "../services/interview.api"
 import { useContext, useCallback } from "react"
 import { InterviewContext } from "../interview.context"
 
-
 export const useInterview = () => {
-
     const context = useContext(InterviewContext)
 
     if (!context) {
@@ -27,7 +25,6 @@ export const useInterview = () => {
         } finally {
             setLoading(false)
         }
-
         return null
     }, [setLoading, setReport])
 
@@ -62,41 +59,40 @@ export const useInterview = () => {
         } finally {
             setReportsLoading(false)
         }
-
         return []
     }, [setReportsLoading, setReports])
 
-    const getResumePdf = useCallback(async (interviewReportId) => {
+    const fetchResumeHtml = useCallback(async (interviewReportId) => {
         try {
             const response = await generateResumePdf({ interviewReportId })
-            const blob = response instanceof Blob ? response : new Blob([ response ], { type: "application/pdf" })
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement("a")
-            link.href = url
-            link.setAttribute("download", `resume_${interviewReportId}.pdf`)
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            window.URL.revokeObjectURL(url)
-        }
-        catch (error) {
-            console.log(error)
+            let htmlContent = ''
+            if (typeof response === 'string') {
+                htmlContent = response
+            } else if (response && typeof response.html === 'string') {
+                htmlContent = response.html
+            } else if (response && response.data && typeof response.data.html === 'string') {
+                htmlContent = response.data.html
+            }
+
+            if (htmlContent.includes('%PDF-')) {
+                throw new Error("Received binary PDF data instead of HTML. Please try clicking 'Reload' to generate fresh HTML.")
+            }
+
+            return htmlContent || '<p>Resume generated. Click to edit content.</p>'
+        } catch (error) {
+            console.error("fetchResumeHtml error:", error)
             throw error
         }
     }, [])
 
-    const fetchResumeBlob = useCallback(async (interviewReportId) => {
-        try {
-            const response = await generateResumePdf({ interviewReportId })
-            const blob = response instanceof Blob ? response : new Blob([ response ], { type: "application/pdf" })
-            return blob
-        }
-        catch (error) {
-            console.log(error)
-            throw error
-        }
-    }, [])
-
-    return { loading, reportsLoading, report, reports, generateReport, getReportById, getReports, getResumePdf, fetchResumeBlob }
-
+    return {
+        loading,
+        reportsLoading,
+        report,
+        reports,
+        generateReport,
+        getReportById,
+        getReports,
+        fetchResumeHtml
+    }
 }
