@@ -7,11 +7,18 @@ const app = express();
 // Trust reverse proxy (e.g., Render) to allow secure cookies over HTTPS
 app.set("trust proxy", 1);
 
+const rawFrontendUrls = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((url) => url.trim().replace(/\/$/, ""))
+  : [];
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL?.replace(/\/$/, ""),
+  "http://localhost:5175",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+  "http://127.0.0.1:5175",
+  ...rawFrontendUrls,
 ].filter(Boolean);
 
 app.use(
@@ -26,11 +33,23 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error(`CORS blocked origin: ${origin}`));
+      // Allow any localhost / 127.0.0.1 port in development
+      const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+      if (isLocalhost) {
+        return callback(null, true);
+      }
+
+      // Allow Vercel frontend deployments
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      console.warn(`CORS blocked request from origin: ${origin}`);
+      return callback(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
   })
 );
 
