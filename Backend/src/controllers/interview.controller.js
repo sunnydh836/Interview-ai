@@ -1,6 +1,6 @@
-const pdfParse = require("pdf-parse")
+﻿const pdfParse = require("pdf-parse")
 const mongoose = require("mongoose")
-const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
+const { generateInterviewReport, generateResumeHtml } = require("../services/ai.service")
 const interviewReportModel = require("../models/interviewReport.model")
 
 /**
@@ -117,7 +117,7 @@ async function getAllInterviewReportsController(req, res) {
 }
 
 /**
- * @description Controller to generate resume PDF based on user self description, resume and job description.
+ * @description Controller to generate resume HTML based on user self description, resume and job description.
  */
 async function generateResumePdfController(req, res) {
     try {
@@ -139,24 +139,27 @@ async function generateResumePdfController(req, res) {
 
         const { resume, jobDescription, selfDescription } = interviewReport
 
-        const pdfBuffer = await generateResumePdf({
+        const htmlContent = await generateResumeHtml({
             resume: resume || "",
             jobDescription: jobDescription || "",
             selfDescription: selfDescription || ""
         })
 
-        res.set({
-            "Content-Type": "application/pdf",
-            "Content-Disposition": `attachment; filename=resume_${interviewReportId}.pdf`
+        return res.status(200).json({
+            message: "Resume HTML generated successfully.",
+            html: htmlContent
         })
-
-        return res.send(pdfBuffer)
     } catch (error) {
-        console.error("Generate Resume PDF Error:", error)
+        console.error("Generate Resume Error:", error)
         return res.status(500).json({
-            message: "An error occurred while generating the resume PDF."
+            message: "An error occurred while generating the resume."
         })
     }
 }
 
-module.exports = { generateInterViewReportController, getInterviewReportByIdController, getAllInterviewReportsController, generateResumePdfController }
+module.exports = {
+    generateInterViewReportController,
+    getInterviewReportByIdController,
+    getAllInterviewReportsController,
+    generateResumePdfController
+}
