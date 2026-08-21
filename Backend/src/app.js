@@ -24,7 +24,8 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow Postman, server-to-server requests, etc.
+      // Allow Postman, server-to-server requests, etc. so tatha every one can see
+      
       if (!origin) {
         return callback(null, true);
       }
