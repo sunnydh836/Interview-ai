@@ -1,7 +1,8 @@
 import { getAllInterviewReports, generateInterviewReport, getInterviewReportById, generateResumePdf } from "../services/interview.api"
-import { useContext } from "react"
+import { useContext, useCallback } from "react"
 import { InterviewContext } from "../interview.context"
 
+const activeRequests = {};
 
 export const useInterview = () => {
 
@@ -13,7 +14,7 @@ export const useInterview = () => {
 
     const { loading, setLoading, reportsLoading, setReportsLoading, report, setReport, reports, setReports } = context
 
-    const generateReport = async ({ jobDescription, selfDescription, resumeFile }) => {
+    const generateReport = useCallback(async ({ jobDescription, selfDescription, resumeFile }) => {
         setLoading(true)
         try {
             const response = await generateInterviewReport({ jobDescription, selfDescription, resumeFile })
@@ -29,26 +30,36 @@ export const useInterview = () => {
         }
 
         return null
-    }
+    }, [setLoading, setReport])
 
-    const getReportById = async (interviewId) => {
-        setLoading(true)
-        try {
-            const response = await getInterviewReportById(interviewId)
-            if (response && response.interviewReport) {
-                setReport(response.interviewReport)
-                return response.interviewReport
-            }
-        } catch (error) {
-            console.log(error)
-            throw error
-        } finally {
-            setLoading(false)
+    const getReportById = useCallback(async (interviewId) => {
+        if (activeRequests[interviewId]) {
+            return await activeRequests[interviewId];
         }
-        return null
-    }
 
-    const getReports = async () => {
+        setLoading(true)
+        const requestPromise = (async () => {
+            try {
+                const response = await getInterviewReportById(interviewId)
+                if (response && response.interviewReport) {
+                    setReport(response.interviewReport)
+                    return response.interviewReport
+                }
+            } catch (error) {
+                console.log(error)
+                throw error
+            } finally {
+                setLoading(false)
+                delete activeRequests[interviewId];
+            }
+            return null
+        })();
+
+        activeRequests[interviewId] = requestPromise;
+        return await requestPromise;
+    }, [setLoading, setReport])
+
+    const getReports = useCallback(async () => {
         setReportsLoading(true)
         try {
             const response = await getAllInterviewReports()
@@ -64,13 +75,13 @@ export const useInterview = () => {
         }
 
         return []
-    }
+    }, [setReportsLoading, setReports])
 
-    const getResumePdf = async (interviewReportId) => {
+    const getResumePdf = useCallback(async (interviewReportId) => {
         let response = null
         try {
             response = await generateResumePdf({ interviewReportId })
-            const blob = response instanceof Blob ? response : new Blob([ response ], { type: "application/pdf" })
+            const blob = response instanceof Blob ? response : new Blob([response], { type: "application/pdf" })
             const url = window.URL.createObjectURL(blob)
             const link = document.createElement("a")
             link.href = url
@@ -84,7 +95,7 @@ export const useInterview = () => {
             console.log(error)
             throw error
         }
-    }
+    }, [])
 
     return { loading, reportsLoading, report, reports, generateReport, getReportById, getReports, getResumePdf }
 

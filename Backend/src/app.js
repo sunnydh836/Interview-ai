@@ -54,6 +54,10 @@ app.get("/api/debug/cookies", (req, res) => {
   });
 });
 
+app.get("/health", (req, res) => {
+  res.status(200).json({ success: true, message: "OK" });
+});
+
 // Routes
 const authRouter = require("./routes/auth.routes");
 const interviewRouter = require("./routes/interview.routes");

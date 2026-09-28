@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import '../style/interview.scss'
 import { useInterview } from '../hooks/useInterview.js'
 import { useParams, Link } from 'react-router'
@@ -13,7 +13,7 @@ const NAV_ITEMS = [
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 const QuestionCard = ({ item, index }) => {
-    const [ open, setOpen ] = useState(false)
+    const [open, setOpen] = useState(false)
     return (
         <div className={`q-card ${open ? 'q-card--open' : ''}`}>
             <div className='q-card__header' onClick={() => setOpen(o => !o)}>
@@ -58,17 +58,41 @@ const RoadMapDay = ({ day }) => (
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const Interview = () => {
-    const [ activeNav, setActiveNav ] = useState('technical')
+    const [activeNav, setActiveNav] = useState('technical')
     const { report, getReportById, loading, getResumePdf } = useInterview()
     const { interviewId } = useParams()
-    const [ isGeneratingResume, setIsGeneratingResume ] = useState(false)
-    const [ error, setError ] = useState("")
+    const [isGeneratingResume, setIsGeneratingResume] = useState(false)
+    const [error, setError] = useState("")
+    const fetchedReportIdRef = useRef(null)
 
     useEffect(() => {
-        if (interviewId) {
-            getReportById(interviewId)
-        }
-    }, [ interviewId, getReportById ])
+        let isMounted = true;
+        const fetchReport = async () => {
+            if (!interviewId || fetchedReportIdRef.current === interviewId) return;
+
+            // If the report for this ID is already in state, simply mark it fetched and return
+            if (report && report._id === interviewId) {
+                fetchedReportIdRef.current = interviewId;
+                return;
+            }
+
+            try {
+                fetchedReportIdRef.current = interviewId;
+                await getReportById(interviewId);
+            } catch (err) {
+                if (isMounted) {
+                    console.error("Error fetching report:", err);
+                    setError("Unable to load interview report. Please check your connection and try again.");
+                }
+            }
+        };
+
+        fetchReport();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [interviewId, getReportById, report])
 
     const handleDownloadResume = async () => {
         if (isGeneratingResume) return
@@ -102,10 +126,27 @@ const Interview = () => {
 
 
 
+    if (error && !report) {
+        return (
+            <main className='loading-screen' style={{ flexDirection: 'column', padding: '2rem', textAlign: 'center', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <div style={{ maxWidth: '600px', backgroundColor: 'var(--surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                    <h1 style={{ color: 'var(--error, #ef4444)', marginBottom: '1rem', fontSize: '1.5rem' }}>Failed to Load Plan</h1>
+                    <p style={{ color: 'var(--text-secondary, #9ca3af)', marginBottom: '2rem', lineHeight: '1.6' }}>{error}</p>
+                    <Link to="/" className='button primary-button' style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                        Back to Dashboard
+                    </Link>
+                </div>
+            </main>
+        )
+    }
+
     if (loading || !report) {
         return (
-            <main className='loading-screen'>
-                <h1>Loading your interview plan...</h1>
+            <main className='loading-screen' style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <svg className="spinner" viewBox="0 0 50 50" width="40" height="40" style={{ animation: 'spin 1s linear infinite', marginBottom: '1rem', color: 'var(--primary)' }} aria-hidden="true">
+                    <circle cx="25" cy="25" r="20" fill="none" strokeWidth="4" stroke="currentColor" strokeLinecap="round" strokeDasharray="1, 150" strokeDashoffset="0"></circle>
+                </svg>
+                <h1 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>Loading your interview plan...</h1>
             </main>
         )
     }

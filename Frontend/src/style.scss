@@ -58,3 +58,11 @@ body,
 .highlight{
     color: var(--accent-primary);
 }
+
+.loading-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}

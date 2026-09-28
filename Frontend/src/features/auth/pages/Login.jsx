@@ -1,4 +1,4 @@
-import React,{useState} from 'react'
+import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
 import "../auth.form.scss"
 import { useAuth } from '../hooks/useAuth'
@@ -8,24 +8,32 @@ const Login = () => {
     const { loading, handleLogin } = useAuth()
     const navigate = useNavigate()
 
-    const [ email, setEmail ] = useState("")
-    const [ password, setPassword ] = useState("")
-    const [ error, setError ] = useState("")
-    const [ showPassword, setShowPassword ] = useState(false)
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [error, setError] = useState("")
+    const [showPassword, setShowPassword] = useState(false)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError("")
         try {
-            await handleLogin({email,password})
-            navigate('/')
+            await handleLogin({ email, password })
+            navigate("/")
         } catch (err) {
-            setError(err.response?.data?.message || err.message || "Invalid email or password")
+            if (!err.response) {
+                setError("Unable to connect to the server.")
+            } else if (err.response.status === 500) {
+                setError("Server error. Please try again later.")
+            } else if (err.response.status === 401) {
+                setError(err.response.data?.message || "Invalid email or password.")
+            } else {
+                setError(err.response.data?.message || err.message || "Login failed")
+            }
         }
     }
 
-    if(loading){
-        return (<main><h1>Loading.......</h1></main>)
+    if (loading) {
+        return (<main className="loading-screen"><h1>Loading.......</h1></main>)
     }
 
 

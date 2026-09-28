@@ -1,31 +1,39 @@
-import React,{useState} from 'react'
+import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
 
 const Register = () => {
 
     const navigate = useNavigate()
-    const [ username, setUsername ] = useState("")
-    const [ email, setEmail ] = useState("")
-    const [ password, setPassword ] = useState("")
-    const [ error, setError ] = useState("")
-    const [ showPassword, setShowPassword ] = useState(false)
+    const [username, setUsername] = useState("")
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [error, setError] = useState("")
+    const [showPassword, setShowPassword] = useState(false)
 
-    const {loading,handleRegister} = useAuth()
-    
+    const { loading, handleRegister } = useAuth()
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError("")
         try {
-            await handleRegister({username,email,password})
+            await handleRegister({ username, email, password })
             navigate("/")
         } catch (err) {
-            setError(err.response?.data?.message || err.message || "Registration failed")
+            if (!err.response) {
+                setError("Unable to connect to the server.")
+            } else if (err.response.status === 500) {
+                setError("Server error. Please try again later.")
+            } else if (err.response.status === 400 || err.response.status === 409) {
+                setError(err.response.data?.message || "An account with this email already exists.")
+            } else {
+                setError(err.response.data?.message || err.message || "Registration failed")
+            }
         }
     }
 
-    if(loading){
-        return (<main><h1>Loading.......</h1></main>)
+    if (loading) {
+        return (<main className="loading-screen"><h1>Loading.......</h1></main>)
     }
 
     return (

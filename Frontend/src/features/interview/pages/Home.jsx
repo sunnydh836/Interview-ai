@@ -9,16 +9,21 @@ const Home = () => {
 
     const { user, handleLogout } = useAuth()
     const { loading, reportsLoading, generateReport, reports, getReports } = useInterview()
-    const [ jobDescription, setJobDescription ] = useState("")
-    const [ selfDescription, setSelfDescription ] = useState("")
-    const [ error, setError ] = useState("")
-    const [ selectedFile, setSelectedFile ] = useState(null)
+    const [jobDescription, setJobDescription] = useState("")
+    const [selfDescription, setSelfDescription] = useState("")
+    const [error, setError] = useState("")
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [selectedFile, setSelectedFile] = useState(null)
     const resumeInputRef = useRef()
+    const fetchedReportsRef = useRef(false)
 
     const navigate = useNavigate()
 
     useEffect(() => {
-        getReports().catch(console.error)
+        if (!fetchedReportsRef.current) {
+            fetchedReportsRef.current = true;
+            getReports().catch(console.error)
+        }
     }, [getReports])
 
     const onLogoutClick = async () => {
@@ -29,7 +34,7 @@ const Home = () => {
     const validateAndSetFile = (file) => {
         if (!file) return
 
-        const allowedExtensions = [ "pdf", "docx" ]
+        const allowedExtensions = ["pdf", "docx"]
         const fileExtension = file.name.split(".").pop().toLowerCase()
 
         if (!allowedExtensions.includes(fileExtension)) {
@@ -51,7 +56,7 @@ const Home = () => {
     }
 
     const handleFileChange = (e) => {
-        const file = e.target.files[ 0 ]
+        const file = e.target.files[0]
         validateAndSetFile(file)
     }
 
@@ -61,7 +66,7 @@ const Home = () => {
 
     const handleDrop = (e) => {
         e.preventDefault()
-        const file = e.dataTransfer.files[ 0 ]
+        const file = e.dataTransfer.files[0]
         if (file) {
             validateAndSetFile(file)
             const dataTransfer = new DataTransfer()
@@ -83,18 +88,19 @@ const Home = () => {
 
     const handleGenerateReport = async () => {
         const resumeFile = selectedFile
-        
+
         if (!jobDescription.trim()) {
             setError("Target Job Description is required.")
             return
         }
-        
+
         if (!resumeFile && !selfDescription.trim()) {
             setError("Either a Resume or a Self Description is required to generate a plan.")
             return
         }
 
         setError("")
+        setIsGenerating(true)
         try {
             const data = await generateReport({ jobDescription, selfDescription, resumeFile })
             if (data && data._id) {
@@ -103,11 +109,13 @@ const Home = () => {
                 setError("Failed to generate report. Please check the backend logs.")
             }
         } catch (err) {
-            setError(err.response?.data?.message || err.message || "Failed to generate interview strategy.")
+            setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to generate interview strategy.")
+        } finally {
+            setIsGenerating(false)
         }
     }
 
-    if (loading) {
+    if (loading && !isGenerating) {
         return (
             <main className='loading-screen'>
                 <h1>Loading your interview plan...</h1>
@@ -119,32 +127,34 @@ const Home = () => {
         <div className='home-page-container'>
             <DashboardNavbar username={user?.username || "User"} onLogout={onLogoutClick} />
             <div className='home-page'>
-    
+
                 {/* Page Header */}
                 <header className='page-header'>
                     <h1>Create Your Custom <span className='highlight'>Interview Plan</span></h1>
                     <p>Let our AI analyze the job requirements and your unique profile to build a winning strategy.</p>
                 </header>
 
-                {error && (
-                    <div className='error-banner' style={{
-                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                        border: '1px solid var(--error)',
-                        color: 'var(--error)',
-                        padding: '1rem',
-                        borderRadius: 'var(--radius-md)',
-                        marginBottom: '1.5rem',
-                        textAlign: 'center',
-                        fontWeight: 'bold'
-                    }}>
-                        {error}
-                    </div>
-                )}
-    
+                <div className='error-banner-wrapper' style={{ minHeight: '3.5rem', width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+                    {error && (
+                        <div className='error-banner' style={{
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid var(--error)',
+                            color: 'var(--error)',
+                            padding: '1rem',
+                            borderRadius: 'var(--radius-md)',
+                            textAlign: 'center',
+                            fontWeight: 'bold',
+                            width: '100%'
+                        }}>
+                            {error}
+                        </div>
+                    )}
+                </div>
+
                 {/* Main Card */}
                 <div className='interview-card'>
                     <div className='interview-card__body'>
-    
+
                         {/* Left Panel - Job Description */}
                         <div className='panel panel--left'>
                             <div className='panel__header'>
@@ -162,10 +172,10 @@ const Home = () => {
                             />
                             <div className='char-counter'>{jobDescription.length} / 5000 chars</div>
                         </div>
-    
+
                         {/* Vertical Divider */}
                         <div className='panel-divider' />
-    
+
                         {/* Right Panel - Profile */}
                         <div className='panel panel--right'>
                             <div className='panel__header'>
@@ -174,15 +184,15 @@ const Home = () => {
                                 </span>
                                 <h2>Your Profile</h2>
                             </div>
-    
+
                             {/* Upload Resume */}
                             <div className='upload-section'>
                                 <label className='section-label'>
                                     Upload Resume
                                     <span className='badge badge--best'>Best Results</span>
                                 </label>
-                                <label 
-                                    className='dropzone' 
+                                <label
+                                    className='dropzone'
                                     htmlFor='resume'
                                     onDragOver={handleDragOver}
                                     onDrop={handleDrop}
@@ -197,9 +207,9 @@ const Home = () => {
                                                 {selectedFile.name}
                                             </p>
                                             <p className='dropzone__subtitle' style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--text-muted)' }}>Click to replace</p>
-                                            <button 
-                                                type="button" 
-                                                onClick={handleClearFile} 
+                                            <button
+                                                type="button"
+                                                onClick={handleClearFile}
                                                 style={{
                                                     background: 'none',
                                                     border: 'none',
@@ -224,21 +234,21 @@ const Home = () => {
                                             <p className='dropzone__subtitle'>PDF or DOCX (Max 5MB)</p>
                                         </>
                                     )}
-                                    <input 
-                                        ref={resumeInputRef} 
-                                        hidden 
-                                        type='file' 
-                                        id='resume' 
-                                        name='resume' 
-                                        accept='.pdf,.docx' 
+                                    <input
+                                        ref={resumeInputRef}
+                                        hidden
+                                        type='file'
+                                        id='resume'
+                                        name='resume'
+                                        accept='.pdf,.docx'
                                         onChange={handleFileChange}
                                     />
                                 </label>
                             </div>
-    
+
                             {/* OR Divider */}
                             <div className='or-divider'><span>OR</span></div>
-    
+
                             {/* Quick Self-Description */}
                             <div className='self-description'>
                                 <label className='section-label' htmlFor='selfDescription'>Quick Self-Description</label>
@@ -250,7 +260,7 @@ const Home = () => {
                                     placeholder="Briefly describe your experience, key skills, and years of experience if you don't have a resume handy..."
                                 />
                             </div>
-    
+
                             {/* Info Box */}
                             <div className='info-box'>
                                 <span className='info-box__icon'>
@@ -260,19 +270,32 @@ const Home = () => {
                             </div>
                         </div>
                     </div>
-    
+
                     {/* Card Footer */}
                     <div className='interview-card__footer'>
                         <span className='footer-info'>AI-Powered Strategy Generation &bull; Approx 30s</span>
                         <button
                             onClick={handleGenerateReport}
+                            disabled={isGenerating}
+                            style={{ minWidth: '280px', justifyContent: 'center' }}
                             className='generate-btn'>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" /></svg>
-                            Generate My Interview Strategy
+                            {isGenerating ? (
+                                <>
+                                    <svg className="spinner" viewBox="0 0 50 50" width="16" height="16" style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true">
+                                        <circle cx="25" cy="25" r="20" fill="none" strokeWidth="5" stroke="currentColor" strokeLinecap="round" strokeDasharray="1, 150" strokeDashoffset="0"></circle>
+                                    </svg>
+                                    Generating...
+                                </>
+                            ) : (
+                                <>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" /></svg>
+                                    Generate My Interview Strategy
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>
-    
+
                 {/* Recent Reports List */}
                 <section className='recent-reports'>
                     <h2>My Recent Interview Plans</h2>
@@ -304,7 +327,7 @@ const Home = () => {
                         <p style={{ color: 'var(--text-muted)', padding: '1rem 0' }}>No recent interview plans. Create one above to get started!</p>
                     )}
                 </section>
-    
+
                 {/* Page Footer */}
                 <footer className='page-footer'>
                     <a href='#'>Privacy Policy</a>

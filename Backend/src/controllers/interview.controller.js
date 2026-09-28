@@ -55,6 +55,16 @@ async function generateInterViewReportController(req, res) {
         })
     } catch (error) {
         console.error("Generate Interview Report Error:", error)
+
+        if (error.name === 'AiServiceError' && error.status === 503) {
+            return res.status(503).json({
+                error: {
+                    code: 'AI_SERVICE_UNAVAILABLE',
+                    message: error.message
+                }
+            })
+        }
+
         return res.status(500).json({
             message: error.message || "An error occurred while generating the interview plan."
         })
