@@ -3,9 +3,7 @@ import { useContext, useCallback } from "react"
 import { InterviewContext } from "../interview.context"
 
 const activeRequests = {};
-
 export const useInterview = () => {
-
     const context = useContext(InterviewContext)
 
     if (!context) {
@@ -28,7 +26,6 @@ export const useInterview = () => {
         } finally {
             setLoading(false)
         }
-
         return null
     }, [setLoading, setReport])
 
@@ -58,7 +55,6 @@ export const useInterview = () => {
         activeRequests[interviewId] = requestPromise;
         return await requestPromise;
     }, [setLoading, setReport])
-
     const getReports = useCallback(async () => {
         setReportsLoading(true)
         try {
@@ -73,7 +69,6 @@ export const useInterview = () => {
         } finally {
             setReportsLoading(false)
         }
-
         return []
     }, [setReportsLoading, setReports])
 
